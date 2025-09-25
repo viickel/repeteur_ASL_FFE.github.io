@@ -1,0 +1,557 @@
+/* ==========================================================================
+   1. Variables & Base Styles
+   ========================================================================== */
+:root {
+    /* Palette de couleurs futuriste */
+    --main-bg-color: #0d1117;
+    --card-bg-color: #161b22;
+    --border-color: #30363d;
+    --text-color-light: #c9d1d9;
+    --text-color-dark: #8b949e;
+    
+    /* Couleurs des lasers */
+    --laser-blue: #007bff;
+    --laser-red: #ff004c;
+    --laser-green: #0cc346;
+    
+    /* Couleurs pour les scores */
+    --score-left-active: var(--laser-red);
+    --score-right-active: var(--laser-green);
+    --score-left-inactive: rgba(255, 0, 76, 0.2);
+    --score-right-inactive: rgba(0, 255, 55, 0.2);
+    --score-initial: var(--card-bg-color);
+    
+    /* Couleurs pour les modales */
+    --modal-bg-gradient-start: #232d3a;
+    --modal-bg-gradient-end: #1c2532;
+    --modal-border-color: var(--laser-blue);
+    --button-primary-start: #3182ce;
+    --button-primary-end: #4a90e2;
+    --button-hover-start: #4a90e2;
+    --button-hover-end: #6ba7f7;
+}
+
+html {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: inline-block;
+    text-align: center;
+    background-color: var(--main-bg-color);
+    color: var(--text-color-light);
+}
+
+body {
+    margin: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    background-color: var(--main-bg-color);
+}
+
+.force-hide {
+    display: none !important;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ==========================================================================
+   2. Layout & Container Components
+   ========================================================================== */
+.content {
+    width: 100%;
+}
+
+.button-row {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin: 5px 0;
+}
+
+.button-spacer {
+    height: 10px !important;
+    display: block !important;
+}
+
+/* ==========================================================================
+   3. Score Display & Controls
+   ========================================================================== */
+.score-container {
+    display: flex;
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+/* Structure qui permet la disposition côte à côte des deux "score-side" */
+.fault-controls {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin: 10px 0; /* Ajoute un peu d'espace vertical */
+}
+
+
+.score-control-container {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.score-side {
+    width: 50%;
+    padding: 3px;
+}
+
+.score {
+    font-family: 'Digital-7 Mono', monospace; /* Police plus futuriste */
+    font-size: 70px;
+    font-weight: bold;
+    color: white;
+    background-color: var(--score-initial);
+    border-radius: 10px;
+    border: 5px solid var(--border-color);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.score_green {
+    border-color: var(--laser-green);
+    color: var(--laser-green);
+    background-color: rgba(0, 255, 115, 0.1); 
+}
+
+.score_red {
+    border-color: var(--laser-red);
+    color: var(--laser-red);
+    background-color: rgba(255, 0, 76, 0.1);
+}
+
+/* Boutons de contrôle du score */
+.point-btn {
+    width: 32%;
+    padding: 15px 5px;
+    background-color: var(--card-bg-color);
+    color: var(--text-color-light);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s;
+}
+
+.point-btn-a {
+    color: var(--laser-blue);
+    border-color: var(--laser-blue);
+}
+
+.point-btn-b {
+    color: var(--laser-green);
+    border-color: var(--laser-green);
+}
+
+.point-btn-c {
+    color: var(--laser-red);
+    border-color: var(--laser-red);
+}
+
+.point-btn:hover {
+    transform: scale(1.05);
+    background-color: var(--border-color);
+}
+
+
+
+/* Conteneur des compteurs de cartons pour chaque côté */
+.card-count-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    padding: 0 5px; /* Petit padding pour éviter de coller le bord */
+}
+
+/* Le conteneur de chaque carton (Blanc, Jaune, Rouge, Noir) */
+.card-counter {
+    width: 23%; /* Permet à 4 éléments de tenir confortablement */
+    height: 35px; /* Hauteur fixe pour un carré */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* L'élément qui affiche le chiffre (la couleur du carton) */
+.card-display {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    font-weight: bold;
+    border-radius: 5px;
+    
+    /* Cache par défaut le chiffre si le compte est à 0 */
+    opacity: 0.5; /* Rendu transparent si le compte est à zéro (mis à jour en JS) */
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+/* Surcharge des couleurs pour les cartons */
+.card-display.card-white {
+    /* Maintient le style de .card-white */
+    background-color: #f0f6fc;
+    color: var(--main-bg-color); /* Texte sombre sur fond clair */
+}
+
+.card-display.card-yellow {
+    /* Maintient le style de .card-yellow */
+    background-color: #e4c700;
+    color: var(--main-bg-color);
+}
+
+.card-display.card-red {
+    /* Maintient le style de .card-red */
+    background-color: var(--laser-red);
+    color: white;
+}
+
+.card-display.card-black {
+    /* Maintient le style de .card-black */
+    background-color: #000;
+    color: white;
+    border: 1px solid var(--text-color-light);
+}
+
+/* Mobile adjustment (si nécessaire) */
+@media (max-width: 768px) {
+    .card-counter {
+        height: 30px; 
+    }
+    .card-display {
+        font-size: 18px;
+    }
+}
+
+
+
+/* Styles appliqués au bouton Start/Stop ET au bouton Reset */
+.startStopButton {
+    /* Utilise 100% de la largeur du conteneur Flex */
+    width: 100%; 
+    height: 70px;
+    color: white;
+    font-size: 55px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    margin-top: 10px;
+    transition: background-color 0.3s, transform 0.1s;
+    
+    /* Couleur par défaut (Laser Blue pour START/PAUSE) */
+    background-color: var(--laser-blue); 
+    box-shadow: 0 0 15px var(--laser-blue);
+}
+
+.startStopButton:hover {
+    background-color: var(--laser-blue); /* Maintient la couleur principale ou une légère variation */
+    transform: scale(1.02);
+}
+
+
+/* Style du bouton de réinitialisation */
+
+#resetBtn {
+    /* Il partagera la plupart de ses styles avec .startStopButton, mais aura la couleur Rouge spécifique du Reset */
+    background-color: var(--laser-red);
+    color: white;
+    box-shadow: 0 0 15px var(--laser-red);
+    
+    /* Harmonisation de la taille et du texte pour correspondre à Start/Stop */
+    width: 100%; /* S'étale sur la largeur disponible, Flexbox le gérera */
+    height: 70px;
+    font-size: 30px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    margin-top: 10px;
+    transition: background-color 0.3s, transform 0.1s;
+}
+
+#resetBtn:hover {
+    /* Le hover peut rester sombre pour indiquer un danger/une réinitialisation */
+    background-color: var(--border-color);
+    transform: scale(1.02);
+}
+
+
+/* ==========================================================================
+   4. Timer Display & Controls
+   ========================================================================== */
+.chrono-container {
+    padding: 5px;
+}
+
+.timer-display {
+    font-family: 'Digital-7 Mono', monospace;
+    font-size: 70px;
+    font-weight: bold;
+    background-color: var(--card-bg-color);
+    color: var(--text-color-light);
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    padding: 10px 0;
+    margin: 5px 0;
+}
+
+.medical-timer {
+    background-color: var(--laser-red);
+    color: white;
+    font-size: 30px;
+    font-weight: bold;
+    border-radius: 10px;
+    padding: 5px;
+    margin: 5px 0;
+}
+
+.timer-button, .card-button {
+    flex-grow: 1;
+    background-color: var(--card-bg-color);
+    color: var(--text-color-light);
+    font-size: 14px;
+    padding: 30px ;
+    border: 2px solid var(--border-color);
+    cursor: pointer;
+    border-radius: 8px;
+    margin: 0 2px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.timer-button:hover, .card-button:hover {
+    background-color: var(--border-color);
+}
+
+.startStopButton .resetBtn{
+    width: 100%;
+    height: 70px;
+    background-color: var(--laser-blue);
+    color: white;
+    font-size: 55px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    margin-top: 10px;
+    transition: background-color 0.3s, transform 0.1s;
+    box-shadow: 0 0 15px var(--laser-blue);
+}
+
+.startStopButton:hover {
+    background-color: var(--laser-blue);
+    transform: scale(1.02);
+}
+
+/* ==========================================================================
+   5. Card System
+   ========================================================================== */
+.card-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin: 5px 0;
+}
+
+.card-button {
+    flex: 1;
+    color: var(--text-color-light);
+    border: 2px solid var(--border-color);
+    transition: background-color 0.3s;
+}
+
+.card-white {
+    background-color: #f0f6fc;
+    color: #0d1117;
+}
+
+.card-yellow {
+    background-color: #e4c700;
+    color: #0d1117;
+}
+
+.card-red {
+    background-color: var(--laser-red);
+    color: white;
+}
+
+.card-black {
+    background-color: #000;
+    color: white;
+}
+
+.undoBtn:hover {
+    background-color: #7777775d;
+    color: grey
+}
+
+
+
+/* Style appliqué pour encadrer chaque bloc de faute individuel */
+.fault-controls .score-side {
+    /* Maintient la largeur à 50% */
+    width: 50%;
+    
+    /* Style de cadre visuel */
+    background-color: var(--card-bg-color); 
+    border: 2px solid var(--border-color); 
+    border-radius: 10px; 
+    
+    /* Espace interne pour que les boutons ne collent pas la bordure */
+    padding: 2px; 
+    
+    /* Espace entre les deux panneaux (cette marge sera visible au milieu) */
+    margin: 0 5px; 
+}
+
+
+/* OPTIMISATION : Assurez-vous que l'espace extérieur soit retiré du .fault-controls si vous l'avez ajouté */
+.fault-controls {
+    /* Retire la marge si elle a été ajoutée pour éviter les doubles marges */
+    margin: 0; 
+    
+    /* Maintient l'espace entre les deux cadres */
+    justify-content: space-evenly;
+}
+
+
+/* ==========================================================================
+   6. Modal & Overlay System
+   ========================================================================== */
+.modal {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.modal-content {
+    background: linear-gradient(145deg, var(--modal-bg-gradient-start), var(--modal-bg-gradient-end));
+    border: 2px solid var(--modal-border-color);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5), inset 0 0 5px rgba(255, 255, 255, 0.1);
+    color: var(--text-color-light);
+}
+
+.modal-content h2, .modal-content h3 {
+    color: var(--text-color-light);
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+}
+
+.modal-button {
+    background: var(--card-bg-color);
+    color: var(--text-color-light);
+    border: 2px solid var(--border-color);
+    transition: background-color 0.3s, transform 0.1s;
+}
+
+.modal-button:hover {
+    background: var(--border-color);
+    transform: scale(1.02);
+}
+
+/* Couleurs spécifiques des boutons de confirmation */
+#yesResetBtn, #setCustomTimeBtn, #saveConfigBtn {
+    background-color: var(--laser-green);
+    border-color: var(--laser-green);
+    color: white;
+    box-shadow: 0 0 10px var(--laser-green);
+}
+
+#yesResetBtn:hover, #setCustomTimeBtn:hover, #saveConfigBtn:hover {
+    background-color: #00cc55;
+}
+
+#noResetBtn {
+    background-color: var(--laser-red);
+    border-color: var(--laser-red);
+    color: white;
+    box-shadow: 0 0 10px var(--laser-red);
+}
+
+#noResetBtn:hover {
+    background-color: #cc003a;
+}
+
+.full-screen-overlay {
+    border-radius: 0;
+    border: 10px solid var(--text-color-light);
+}
+
+#whiteOverlay { background-color: rgba(255, 255, 255, 0.8); }
+#yellowOverlay { background-color: rgba(255, 255, 0, 0.8); }
+#redOverlay { background-color: rgba(255, 0, 0, 0.8); }
+#blackOverlay { background-color: rgba(0, 0, 0, 0.8); }
+
+/* ==========================================================================
+   7. Media Queries
+   ========================================================================== */
+/* Mobile optimization */
+@media (max-width: 768px) {
+    .score {
+        font-size: 67px;
+    }
+
+    .timer-display {
+        font-size: 50px;
+    }
+
+    .startStopButton .resetBtn{
+        height: 70px; /* Taille harmonisée */
+        font-size: 30px;
+    }
+    
+
+
+    .point-btn {
+        padding: 25px 10px;
+        font-size: 13px;
+    }
+
+    .card-button {
+        font-size: 16px; /* Augmenté de 14px à 16px */
+        padding: 15px 5px; /* Réduit le padding vertical pour gagner de l'espace */
+    }
+    
+    /* -------------------------------------- */
+    /* LOGIQUE DE DISPOSITION FAUTES CORRIGÉE */
+    /* -------------------------------------- */
+
+    .fault-row-container {
+        /* NOUVEAU : Assure que c'est un Flexbox et qu'il passe à la ligne */
+        display: flex; 
+        flex-wrap: wrap; 
+        gap: 0; /* Annule le gap du .button-row pour éviter les débordements */
+    }
+    
+    .fault-btn {
+        width: 49%; 
+        box-sizing: border-box; 
+        margin: 0.5%;
+        
+        font-size: 23px; /* Légèrement augmenté de 10px à 11px pour la lisibilité */
+        padding: 10px 12px; /* Augmenté de 8px à 10px */
+        margin-bottom: 20px; 
+    }
+    
+    /* NOUVEAU : Assurez-vous que le conteneur des deux colonnes n'a pas de gap */
+    .fault-controls {
+        gap: 0; /* Annuler le gap pour éviter les conflits de largeur */
+        justify-content: space-between;
+    }
+    
+}

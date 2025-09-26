@@ -72,4 +72,4 @@ Les contributions sont les bienvenues ! Si vous avez des suggestions de fonction
 
 ## 📄 Licence
 
-Ce projet est distribué sous licence [LICENCE_A_CHOISIR, ex: MIT].
+Ce projet est distribué sous licence MIT.

@@ -8,6 +8,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentMatchScoreLeft = 0;
     let currentMatchScoreRight = 0;
 
+    let medicalTimerId;
+    let medicalTimeInSeconds = 300; // 5 minutes
+
+    const medicalOverlay = document.getElementById('medicalOverlay');
+    const medicalChronoDisplay = document.getElementById('medicalChrono'); 
+    const closeMedicalBtn = document.getElementById('closeMedicalBtn');
+
     // Historique des actions pour l'annulation
     const scoreHistory = [];
     const MAX_HISTORY_SIZE = 30; 
@@ -39,6 +46,8 @@ const penalties = {
     const leftScoreDisplay = document.getElementById('left_score');
     const rightScoreDisplay = document.getElementById('right_score');
     const chronoControls = document.getElementById('chronoControls'); 
+
+    
 
   
     // Autres boutons
@@ -197,35 +206,38 @@ function updateCardDisplay() {
         }
     }
     
-    function undoLastAction() {
+    
+    /**
+ * Annule la dernière action en restaurant l'état précédent du match.
+ * Cela inclut les scores et les pénalités.
+ */
+function undoLastAction() {
+    // 1. On vérifie s'il y a des actions à annuler
     if (scoreHistory.length > 0) {
-        // Supprime l'état actuel (qui est l'action que l'on souhaite annuler)
-        scoreHistory.pop(); // On retire l'état post-action
-        
-        // Si l'historique est vide après le pop, on réinitialise à zéro
-        if (scoreHistory.length === 0) {
-            // Cas où on annule la toute première action. On réinitialise tout
-            resetMatch(); 
-            return;
-        }
+        // 2. On récupère le dernier état sauvegardé et on le retire de l'historique
+        const previousState = scoreHistory.pop();
 
-        // Récupère l'état précédent
-        const previousState = scoreHistory[scoreHistory.length - 1]; 
-        
-        // Restaure les scores
+        // 3. On restaure les variables du jeu avec les valeurs de l'historique
         currentMatchScoreLeft = previousState.left;
         currentMatchScoreRight = previousState.right;
+
+        // C'est la partie cruciale pour les cartons :
+        // On restaure l'objet "penalties" avec le contenu sauvegardé
+        // L'opérateur de décomposition (...) est essentiel pour une copie profonde
+        penalties.left = { ...previousState.penalties.left };
+        penalties.right = { ...previousState.penalties.right };
+
+        // 4. On met à jour l'affichage de l'interface
         leftScoreDisplay.textContent = currentMatchScoreLeft;
         rightScoreDisplay.textContent = currentMatchScoreRight;
-        
-        // Restaure les pénalités
-        // On effectue un Deep Clone pour que les futurs changements ne modifient pas l'historique
-        Object.assign(penalties.left, JSON.parse(JSON.stringify(previousState.penalties.left)));
-        Object.assign(penalties.right, JSON.parse(JSON.stringify(previousState.penalties.right)));
-        
-        
+        updateCardDisplay(); // Cette fonction met à jour les compteurs de cartons
+
+        console.log("Dernière action annulée. Retour à l'état précédent.");
+    } else {
+        console.log("Historique vide. Aucune action à annuler.");
     }
 }
+
     
     function startStopTimer() {
         if (isTimerRunning) {
@@ -279,6 +291,11 @@ function updateCardDisplay() {
 
                 
             };
+
+
+    clearInterval(medicalTimerId);
+    isMedicalBreak = false;
+    medicalTimeInSeconds = 300;
         
         leftScoreDisplay.textContent = '0';
         rightScoreDisplay.textContent = '0';
@@ -286,8 +303,10 @@ function updateCardDisplay() {
         startStopButton.textContent = 'START';
         startStopButton.style.backgroundColor = 'green';
         resetBtn.style.display = 'none';
+        updateCardDisplay();
 
         
+
 
     }
 
@@ -301,6 +320,8 @@ function updateCardDisplay() {
  * @returns {object} { card: string, points: number, endsMatch: boolean }
  */
 function determineCardAndPoints(player, group) {
+   saveStateToHistory();
+
     let card = '';
     let points = 0;
     let endsMatch = false;
@@ -434,6 +455,8 @@ function handleElimination(player) {
     //Écouteur pour les  boutons de faute (Faute Grp 1, 2, 3, 4)
     faultButtons.forEach(button => {
         button.addEventListener('click', () => {
+            
+
             const player = button.dataset.player; 
             const group = parseInt(button.dataset.group, 10); 
             
@@ -453,6 +476,14 @@ function handleElimination(player) {
             console.log(`Combattant ${player} a reçu un ${sanction.card.toUpperCase()} (Groupe ${group}). Points pour l'adversaire : ${sanction.points}`);
         });
     });
+
+
+    // Écouteur pour le bouton de pause médicale
+    medicalBreakBtn.addEventListener('click', startMedicalBreak);
+
+    // Nouvel écouteur pour fermer la modale médicale manuellement
+    closeMedicalBtn.addEventListener('click', endMedicalBreak);
+
 
 
     // 1. Logique pour le bouton 30 SECONDES
@@ -492,6 +523,78 @@ function handleElimination(player) {
             alert("Format de temps invalide. Veuillez utiliser le format MM:SS (ex: 03:00).");
         }
     }
+
+
+
+/**
+ * Gère le déclenchement et le fonctionnement de la pause médicale.
+ * Utilise une modale (overlay) au lieu d'une nouvelle fenêtre.
+ */
+/**
+ * Gère le déclenchement et le fonctionnement de la pause médicale.
+ * Utilise une modale (overlay) au lieu d'une nouvelle fenêtre.
+ */
+function startMedicalBreak() {
+    if (isMedicalBreak) {
+        return; // Empêche de déclencher plusieurs pauses simultanément
+    }
+
+    if (isTimerRunning) {
+        clearInterval(timerId);
+        startStopButton.textContent = 'PAUSE';
+        startStopButton.style.backgroundColor = 'red';
+    }
+    isMedicalBreak = true;
+    
+    // Afficher la modale
+    medicalOverlay.classList.remove('hidden');
+    
+    // Réinitialise le temps de pause à 5 minutes (300 secondes)
+    let popupTime = 300; 
+    
+    // Met à jour l'affichage initial du chrono dans la modale
+    medicalChronoDisplay.textContent = formatTime(popupTime);
+
+    // Lance le décompte du chrono médical
+    medicalTimerId = setInterval(() => {
+        popupTime--;
+        medicalChronoDisplay.textContent = formatTime(popupTime);
+        
+        if (popupTime <= 0) {
+            endMedicalBreak();
+        }
+    }, 1000);
+}
+
+/**
+ * Met fin à la pause médicale, masque la modale et relance le match.
+ */
+function endMedicalBreak() {
+    clearInterval(medicalTimerId);
+    medicalOverlay.classList.add('hidden');
+    isMedicalBreak = false;
+    alert("Fin de la pause médicale ! Le match va reprendre.");
+    if (!isTimerRunning) {
+        startStopTimer();
+    }
+}
+
+/**
+ * Met fin à la pause médicale, masque la modale et relance le match.
+ */
+function endMedicalBreak() {
+    clearInterval(medicalTimerId);
+    medicalOverlay.classList.add('hidden');
+    isMedicalBreak = false;
+    alert("Fin de la pause médicale ! Le match va reprendre.");
+    if (!isTimerRunning) {
+        startStopTimer();
+    }
+}
+
+
+
+
 
     // Bloc des raccourcis clavier
 document.addEventListener('keydown', (event) => {
